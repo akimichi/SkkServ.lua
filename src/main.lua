@@ -1,22 +1,23 @@
 local signal = require("posix.signal")
 local socket = require("socket")
 local string = require("string")
+local dictionary = require("src/dictionary")
 
 -- create a TCP socket and bind it to the local host, at any port
-local server = assert(socket.bind("127.0.0.1", 0))
+local server = assert(socket.bind("127.0.0.1", 12345))
 local ip, port = server:getsockname()
 
 print(string.format("telnet %s %s", ip, port))
 
 local running = 1
 
-local function stop(sig)
-    running = 0
-    return 0
-end
+-- local function stop(sig)
+--     running = 0
+--     return 0
+-- end
 
 -- Interrupt
-signal.signal(signal.SIGINT, stop)
+signal.signal(signal.SIGINT, nil)
 
 while 1 == running do
     local client = server:accept()
@@ -29,7 +30,9 @@ while 1 == running do
         running = 0
         break
       elseif command == '1' then -- 変換結果を返す
-        client:send("未実装")
+        local yomi =  string.sub(message, 2, #message)
+        local candidates = dictionary[yomi]
+        client:send(candidates)
         client:send("\n")
         -- response = get(connection, line)
         -- if response
